@@ -16,7 +16,7 @@ jobs:
       - name: Set up Java Development Kit (JDK)
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Set up Flutter
