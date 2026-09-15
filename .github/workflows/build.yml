@@ -1,58 +1,38 @@
-plugins {
-    id "com.android.application"
-    id "kotlin-android"
-    id "dev.flutter.flutter-plugin-loader"
-}
+name: Build Android APK
 
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withInputStream { properties ->
-        properties.load(properties)
-    }
-}
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
 
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
-}
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
-}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-android {
-    namespace "com.example.raqs_jan"
-    compileSdkVersion 34
-    ndkVersion flutter.ndkVersion
+      - name: Set up Java Development Kit (JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
 
-    kotlinOptions {
-        jvmTarget = '17'
-    }
+      - name: Get dependencies
+        run: flutter pub get
 
-    defaultConfig {
-        applicationId "com.example.raqs_jan"
-        minSdkVersion 21
-        targetSdkVersion 34
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
-    }
+      - name: Build Release APK
+        run: flutter build apk --release
 
-    buildTypes {
-        release {
-            signingConfig signingConfigs.debug
-            minifyEnabled false
-            shrinkResources false
-        }
-    }
-}
-
-flutter {
-    source '../..'
-}
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
